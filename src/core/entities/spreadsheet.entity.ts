@@ -81,7 +81,7 @@ export class Spreadsheet {
         fields: "id",
       } as any);
       spreadsheet.data.sheets?.forEach((sheet: any, index: number) => {
-        this.sheets[index].sheetId = sheet[index].properties?.sheetId;
+        this.sheets[index].sheetId = sheet.properties?.sheetId;
       });
       return spreadsheet.data.spreadsheetId;
     } catch (err) {
