@@ -6,7 +6,11 @@ import type { Column } from "./column.entity";
 
 export class Sheet {
   sheetId?: number;
+  spreadsheetId?: string;
   constructor(public sheetName: string, public columns: Column[]) {}
+  setSpreadsheetId(spreadsheetId: string) {
+    this.spreadsheetId = spreadsheetId;
+  }
   private getHeaderCreateConfig(spreadsheetId: string): unknown {
     return {
       spreadsheetId,
@@ -155,5 +159,27 @@ export class Sheet {
         requests,
       },
     });
+  }
+
+  async addData(spreadsheetId: string, data: any[][]) {
+    console.log(">> data", data);
+    try {
+      const updateToGsheet = [
+        ["Name1", "CARRIER", "", "", "1", "ACTIVE", "2024-30-01"],
+        ["Name2", "CHARTERING", "", "", "2", "ACTIVE", "2024-30-01"],
+        ["Name3", "CARRIER", "", "", "3", "ACTIVE", "2024-30-01"],
+      ];
+      await sheetService.spreadsheets.values.update({
+        spreadsheetId: spreadsheetId,
+        range: `Sheet1!A2:H1000`,
+        valueInputOption: "RAW",
+        resource: {
+          values: updateToGsheet,
+        },
+      } as any);
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 }
