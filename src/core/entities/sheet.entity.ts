@@ -1,4 +1,3 @@
-const { google } = require("googleapis");
 import { sheetService } from "../../infrastructure/googlesheet-service";
 import { ValidationType } from "../enums/validation-type.enum";
 import { Column } from "./column.entity";

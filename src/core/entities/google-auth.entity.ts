@@ -1,6 +1,6 @@
 const { google } = require("googleapis");
 export class GoogleAuth {
-    private static instance: GoogleAuth;
+    // private static instance: GoogleAuth;
     constructor(readonly serviceAccountEmail: string, readonly privateKey: string) {
         // if (GoogleAuth.instance) {
         //     return GoogleAuth.instance;
