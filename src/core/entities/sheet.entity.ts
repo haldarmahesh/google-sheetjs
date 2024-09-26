@@ -2,7 +2,7 @@ import { sheetService } from "../../infrastructure/googlesheet-service";
 import { ValidationType } from "../enums/validation-type.enum";
 import { Column } from "./column.entity";
 import type { Spreadsheet } from "./spreadsheet.entity";
-
+import { SheetUtils } from "../utils/sheet.utils";
 export class Sheet {
   sheetId?: number;
   spreadsheetId?: string;
@@ -19,10 +19,20 @@ export class Sheet {
     this.columns.push(header);
     return header;
   }
+
+  public addColumns(columnList: Column[]): this {
+    this.headerNames = columnList.map((column) => column.name);
+    this.columns = columnList;
+    return this;
+  }
+
   private getHeaderCreateConfig(spreadsheetId: string): unknown {
     return {
       spreadsheetId,
-      range: `${this.name}!A1:AV`,
+      range: `${this.name}!${SheetUtils.generateSheetRange(
+        this.columns.length,
+        1
+      )}`,
       valueInputOption: "RAW",
       requestBody: {
         values: [this.columns.map((column) => column.name)],
@@ -178,7 +188,11 @@ export class Sheet {
         this.spreadsheet.googleAuth
       ).spreadsheets.values.update({
         spreadsheetId: this.spreadsheet.spreadsheetId,
-        range: `${this.name}!A2`,
+        range: `${this.name}!${SheetUtils.generateSheetRange(
+          this.columns.length,
+          data.length,
+          2
+        )}`,
         valueInputOption: "USER_ENTERED",
         resource: {
           values: data,

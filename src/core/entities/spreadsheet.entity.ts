@@ -9,12 +9,14 @@ export class Spreadsheet {
   public sheets: Sheet[] = [];
   constructor(
     public title: string,
+    public version: string = "1.0.0",
     {
       serviceAccountEmail,
       privateKey,
     }: { serviceAccountEmail: string; privateKey: string }
   ) {
     this.googleAuth = new GoogleAuth(serviceAccountEmail, privateKey);
+    this.version = version;
   }
   public async loadProperties(spreadsheetId: string): Promise<void> {
     this.spreadsheetId = spreadsheetId;
@@ -67,6 +69,13 @@ export class Spreadsheet {
           properties: {
             title: this.title,
           },
+          developerMetadata: [
+            {
+              metadataKey: "version",
+              metadataValue: this.version,
+              visibility: "DOCUMENT",
+            },
+          ],
           sheets: this.sheets.map((sheet) => ({
             properties: {
               title: sheet.name,
@@ -74,6 +83,7 @@ export class Spreadsheet {
           })),
         },
       } as any);
+
       console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
 
       await driveService(this.googleAuth).permissions.create({
