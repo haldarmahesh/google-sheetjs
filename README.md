@@ -1,4 +1,4 @@
-# google-sheet-demo
+# google-sheetjs
 
 To install dependencies:
 
