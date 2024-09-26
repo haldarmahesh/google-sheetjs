@@ -1,29 +1,44 @@
-import { driveService, sheetService } from "../../../services";
-import type { Sheet } from "./sheet.entity";
+
+import { driveService } from "../../infrastructure/drive-service";
+import { sheetService } from "../../infrastructure/googlesheet-service";
+import { GoogleAuth } from "./google-auth.entity";
+import { Sheet } from "./sheet.entity";
 
 export class Spreadsheet {
   spreadsheetId?: string;
-  title: string;
-  constructor(public sheets: Sheet[]) {
-    this.title = `tcm-${new Date().toISOString().slice(0, 19)}`;
+  public googleAuth: GoogleAuth;
+  public sheets: Sheet[] = [];
+  constructor(public title: string, {
+    serviceAccountEmail,
+    privateKey,
+  }: {serviceAccountEmail: string, privateKey: string}) {
+    this.googleAuth = new GoogleAuth(serviceAccountEmail, privateKey);
+  }
+  public addSheet(name: string): Sheet {
+    const sheet = new Sheet(name, this);
+    this.sheets.push(sheet);
+    return sheet;
+  }
+  public isCreated(): boolean {
+    return !!this.spreadsheetId; 
   }
   private async createSpreasheet(): Promise<string> {
     try {
-      const spreadsheet: any = await sheetService.spreadsheets.create({
+      const spreadsheet: any = await sheetService(this.googleAuth).spreadsheets.create({
         resource: {
           properties: {
             title: this.title,
           },
           sheets: this.sheets.map((sheet) => ({
             properties: {
-              title: sheet.sheetName,
+              title: sheet.name,
             },
           })),
         },
       } as any);
       console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
 
-      await driveService.permissions.create({
+      await driveService(this.googleAuth).permissions.create({
         resource: {
           type: "domain",
           role: "writer",
@@ -57,7 +72,7 @@ export class Spreadsheet {
     }
     const sheetIdMissing = this.sheets.find((sheet) => !sheet.sheetId);
     if (sheetIdMissing) {
-      const spreadsheetData: any = await sheetService.spreadsheets.get({
+      const spreadsheetData: any = await sheetService(this.googleAuth).spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
       });
       spreadsheetData.data.sheets.forEach((sheet: any, index: number) => {

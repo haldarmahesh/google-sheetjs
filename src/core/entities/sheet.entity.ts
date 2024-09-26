@@ -1,20 +1,26 @@
 const { google } = require("googleapis");
-import { googleAuth } from "../../../google-auth";
-import { sheetService } from "../../../services";
+import { sheetService } from "../../infrastructure/googlesheet-service";
 import { ValidationType } from "../enums/validation-type.enum";
-import type { Column } from "./column.entity";
+import { Column } from "./column.entity";
+import type { Spreadsheet } from "./spreadsheet.entity";
 
 export class Sheet {
   sheetId?: number;
   spreadsheetId?: string;
-  constructor(public sheetName: string, public columns: Column[]) {}
-  setSpreadsheetId(spreadsheetId: string) {
-    this.spreadsheetId = spreadsheetId;
+  public columns: Column[] = [];
+  constructor(public name: string, private spreadsheet: Spreadsheet) {}
+  public getSpreadsheetId(): string {
+    return this.spreadsheet.spreadsheetId || "N/A";
+  }
+  public addColumn(name: string): Column {
+    const column = new Column(name);
+    this.columns.push(column);
+    return column;
   }
   private getHeaderCreateConfig(spreadsheetId: string): unknown {
     return {
       spreadsheetId,
-      range: `${this.sheetName}!A1:AV`,
+      range: `${this.name}!A1:AV`,
       valueInputOption: "RAW",
       requestBody: {
         values: [this.columns.map((column) => column.name)],
@@ -22,7 +28,7 @@ export class Sheet {
     };
   }
   async addHeaders(spreadsheetId: string): Promise<void> {
-    await sheetService.spreadsheets.values.update(
+    await sheetService(this.spreadsheet.googleAuth).spreadsheets.values.update(
       this.getHeaderCreateConfig(spreadsheetId) as any
     );
     console.log(">> Headers added");
@@ -153,7 +159,7 @@ export class Sheet {
       ...this.getHeaderFormatConfig(),
       ...this.getColumnConfig(),
     ];
-    await sheetService.spreadsheets.batchUpdate({
+    await sheetService(this.spreadsheet.googleAuth).spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
         requests,
@@ -161,25 +167,45 @@ export class Sheet {
     });
   }
 
-  async addData(spreadsheetId: string, data: any[][]) {
-    console.log(">> data", data);
+  async addData(data: any[][]) {
+    console.log('>> Da', data)
+    if(!this.sheetId) {
+        throw new Error("Sheet ID is not available");
+    }
     try {
-      const updateToGsheet = [
-        ["Name1", "CARRIER", "", "", "1", "ACTIVE", "2024-30-01"],
-        ["Name2", "CHARTERING", "", "", "2", "ACTIVE", "2024-30-01"],
-        ["Name3", "CARRIER", "", "", "3", "ACTIVE", "2024-30-01"],
-      ];
-      await sheetService.spreadsheets.values.update({
-        spreadsheetId: spreadsheetId,
-        range: `Sheet1!A2:H1000`,
-        valueInputOption: "RAW",
+      await sheetService(this.spreadsheet.googleAuth).spreadsheets.values.update({
+        spreadsheetId: this.spreadsheet.spreadsheetId,
+        range: `${this.name}!A2`,
+        valueInputOption: "USER_ENTERED",
         resource: {
-          values: updateToGsheet,
+          values: data,
         },
       } as any);
     } catch (err) {
       console.log(err);
       throw err;
+    }
+  }
+  checkIfSpreadsheetIdExists(): void {
+    if(!this.spreadsheet.spreadsheetId) {
+        throw new Error("Spreadsheet ID is not available");
+    }
+  }
+  async readData(): Promise<any[][]> {
+    this.checkIfSpreadsheetIdExists()
+    try {   
+
+        const infoObjectFromSheet = await sheetService(this.spreadsheet.googleAuth).spreadsheets.values.get({
+            spreadsheetId: this.spreadsheet.spreadsheetId,
+            range: `${this.name}!A2:Z1000`,
+        })
+
+        const valuesFromSheet = infoObjectFromSheet.data.values;
+        return valuesFromSheet as any[][];
+
+    } catch(err) {
+        console.log(err)
+        throw err;
     }
   }
 }
