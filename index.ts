@@ -1,24 +1,29 @@
 import { googleAuth } from "./google-auth";
 
-const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const auth = googleAuth;
 
 const service = google.sheets({ version: "v4", auth });
 async function create(title: string) {
-  const resource = {
-    properties: {
-      title,
-    },
-  };
   try {
     const driveService = google.drive({ version: "v3", auth });
 
     const spreadsheet = await service.spreadsheets.create({
-      resource,
+      resource: {
+        properties: {
+          title,
+        },
+        sheets: [
+          {
+            properties: {
+              title: "Contracts",
+            },
+          },
+        ],
+      },
       fields: "spreadsheetId",
     });
-
+    console.log("?? RESPONSE", spreadsheet.data);
     console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
 
     await driveService.permissions.create({
@@ -250,11 +255,11 @@ async function writeSheet(googleSheetId: string) {
     throw err;
   }
 }
-// const spreadsheetId = await create(
-//   `tcm-${new Date().toISOString().slice(0, 19)}`
-// );
-const spreadsheetId = "1o79YFEU2OiMoi6Wz---7T7cjCGGgyYVuW8ivCLpHbS0";
-await addHeader(spreadsheetId);
+const spreadsheetId = await create(
+  `tcm-${new Date().toISOString().slice(0, 19)}`
+);
+// const spreadsheetId = "1o79YFEU2OiMoi6Wz---7T7cjCGGgyYVuW8ivCLpHbS0";
+// await addHeader(spreadsheetId);
 
 // await readSheet(spreadsheetId);
 // await writeSheet(spreadsheetId);
