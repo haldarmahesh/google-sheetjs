@@ -1,4 +1,4 @@
-import * as entities from './core/entities';
-import * as enums from './core/enums';
+import { Spreadsheet, Column, DataValidation, Sheet } from "./core/entities";
+import { ValidationType } from "./core/enums";
 
-export { entities, enums };
+export { Spreadsheet, Column, DataValidation, Sheet, ValidationType };

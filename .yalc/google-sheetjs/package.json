@@ -8,16 +8,15 @@
   "scripts": {
     "build": "bun run build.mjs"
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "bun-plugin-dts": "^0.2.3"
-  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "google-auth-library": "^9.14.1",
-    "google-sheetjs": "file:.yalc/google-sheetjs",
     "googleapis": "^144.0.0"
-  }
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "yalcSig": "aca2ee93671dc9f677bf00cbeacda9ce"
 }
