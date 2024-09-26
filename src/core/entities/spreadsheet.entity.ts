@@ -116,8 +116,7 @@ export class Spreadsheet {
     }
   }
   async create() {
-    // this.spreadsheetId = await this.createSpreasheet();
-    this.spreadsheetId = "1ZPizNoPvzKub96vrnb3q16L7JTic4Gcy_YjdAl41TwU";
+    this.spreadsheetId = await this.createSpreasheet();
     await this.checkAndGetRequiredMetadata();
     await this.addHeaders(0);
   }

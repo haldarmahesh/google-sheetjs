@@ -5,19 +5,20 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "scripts": {
-    "build": "bun run build.mjs"
+    "build": "bun run build.mjs",
+    "build:tsc": "tsc"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "bun-plugin-dts": "^0.2.3"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "googleapis": "^144.0.0"
   },
   "dependencies": {
-    "google-auth-library": "^9.14.1",
-    "google-sheetjs": "file:.yalc/google-sheetjs",
-    "googleapis": "^144.0.0"
+    "google-auth-library": "^9.14.1"
   }
 }
