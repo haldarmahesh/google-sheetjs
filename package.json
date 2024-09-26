@@ -1,6 +1,6 @@
 {
   "name": "google-sheetjs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "module": "index.ts",
   "type": "module",
   "main": "dist/index.js",
@@ -15,10 +15,10 @@
     "bun-plugin-dts": "^0.2.3"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0",
-    "googleapis": "^144.0.0"
+    "typescript": "^5.0.0"
   },
   "dependencies": {
+    "googleapis": "^144.0.0",
     "google-auth-library": "^9.14.1"
   }
 }
