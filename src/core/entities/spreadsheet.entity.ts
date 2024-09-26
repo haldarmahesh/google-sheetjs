@@ -55,6 +55,11 @@ export class Spreadsheet {
   }
   private async createSpreasheet(): Promise<string> {
     try {
+      if (this.sheets.length === 0) {
+        throw new Error(
+          "Sheet is missing. At least one sheet is required to create a spreadsheet, use class Sheet to add a sheet"
+        );
+      }
       const spreadsheet: any = await sheetService(
         this.googleAuth
       ).spreadsheets.create({
