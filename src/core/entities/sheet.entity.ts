@@ -206,12 +206,28 @@ export class Sheet {
   getHeaderNames(): string[] {
     return this.columns.map((column) => column.name);
   }
-  async addRow(rowData: Record<string, string>) {
-    const currentColumnNames = this.getHeaderNames();
-    const allColumnNameMatches = Object.keys(rowData).every((rowKey) => {
-      return currentColumnNames.includes(rowKey);
+  async appendRows(rowsData: Record<string, string>[]) {
+    const rowsRequestData: any[][] = [];
+    rowsData.forEach((rowData) => {
+      rowsRequestData.push(this.addRow(rowData));
     });
-
+    await sheetService(this.spreadsheet.googleAuth).spreadsheets.values.append({
+      spreadsheetId: this.spreadsheet.spreadsheetId,
+      range: `${this.name}!A1`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: rowsRequestData,
+      },
+    });
+    console.log(">> Rows added");
+  }
+  private addRow(rowData: Record<string, string>) {
+    const currentColumnNames = this.getHeaderNames();
+    const rowKeys = Object.keys(rowData);
+    const requestBodyRowData: any[] = [];
+    const allColumnNameMatches = rowKeys.every((columnName) => {
+      return currentColumnNames.includes(columnName);
+    });
     if (!allColumnNameMatches) {
       console.log(
         "the columns names you passed are =>",
@@ -221,7 +237,10 @@ export class Sheet {
       );
       throw new Error("Add correct column names");
     }
-    sheetService(this.spreadsheet.googleAuth).spreadsheets.values.append({});
+    currentColumnNames.forEach((columnName) => {
+      requestBodyRowData.push(rowData[columnName]);
+    });
+    return requestBodyRowData;
   }
   checkIfSpreadsheetIdExists(): void {
     if (!this.spreadsheet.spreadsheetId) {
