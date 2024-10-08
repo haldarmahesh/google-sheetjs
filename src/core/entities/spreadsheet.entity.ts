@@ -1,7 +1,7 @@
 import { driveService } from "../../infrastructure/drive-service";
 import { sheetService } from "../../infrastructure/googlesheet-service";
 import { GoogleAuth } from "./google-auth.entity";
-import { Sheet } from "./sheet.entity";
+import { Sheet, SheetProperties } from "./sheet.entity";
 
 export class Spreadsheet {
   spreadsheetId?: string;
@@ -33,7 +33,14 @@ export class Spreadsheet {
       // load sheets props
       if (spreadsheetData.data.sheets?.length) {
         spreadsheetData.data.sheets.forEach((sheet: any, index: number) => {
-          const newSheet = new Sheet(sheet.properties.title, this);
+          const newSheet = new Sheet(
+            sheet.properties.title,
+            this,
+            new SheetProperties(
+              sheet.properties.gridProperties.rowCount,
+              sheet.properties.gridProperties.columnCount
+            )
+          );
           newSheet.sheetId = sheet.properties.sheetId;
           this.sheets.push(newSheet);
           this.sheets[index].loadHeader();
@@ -55,7 +62,7 @@ export class Spreadsheet {
   public isCreated(): boolean {
     return !!this.spreadsheetId;
   }
-  private async createSpreasheet(): Promise<string> {
+  public async createSpreasheet(): Promise<string> {
     try {
       if (this.sheets.length === 0) {
         throw new Error(
@@ -79,6 +86,10 @@ export class Spreadsheet {
           sheets: this.sheets.map((sheet) => ({
             properties: {
               title: sheet.name,
+              gridProperties: {
+                rowCount: 1000,
+                columnCount: sheet.columns.length,
+              },
             },
           })),
         },
@@ -109,6 +120,7 @@ export class Spreadsheet {
     if (!this.spreadsheetId) {
       throw new Error("Spreadsheet ID is not available");
     }
+    this.sheets[sheetIndex].properties = new SheetProperties(1000, this.sheets[sheetIndex].columns.length);
     await this.sheets[sheetIndex].addHeaders(this.spreadsheetId);
     await this.sheets[sheetIndex].addFormattingAndValidations(
       this.spreadsheetId
@@ -132,7 +144,9 @@ export class Spreadsheet {
   }
   async create() {
     this.spreadsheetId = await this.createSpreasheet();
+    // this.spreadsheetId = "1vOLEtYeGk7RQmzRidPlLRsWq9hEpngDajCEwk30JFkg";
     await this.checkAndGetRequiredMetadata();
+    console.log('>> 1.1')
     await this.addHeaders(0);
   }
 }
