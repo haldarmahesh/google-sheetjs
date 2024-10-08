@@ -1,5 +1,5 @@
 export class SheetUtils {
-  private static columnNumberToLetter(columnNumber: number) {
+  static columnNumberToLetter(columnNumber: number) {
     let letter = "";
     while (columnNumber > 0) {
       let modulo = (columnNumber - 1) % 26;

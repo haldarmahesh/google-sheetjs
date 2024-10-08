@@ -290,6 +290,43 @@ export class Sheet {
             fields: "dataValidation",
           },
         };
+      } else if(column.validation.type === ValidationType.CUSTOM_REGEX_MATCH) {
+        if (!column.validation.values[0]) {
+          throw new Error("Regex pattern is required for custom regex match");
+        }
+        if(column.validation.values.length > 1) {
+          console.warn(
+            "Only first value will be considered for custom regex match"
+          );
+        }
+        return {
+          repeatCell: {
+            range: {
+              sheetId: this.sheetId,
+              startRowIndex: this.groupHeaderConfig.enabled ? 2 : 1,
+              startColumnIndex: index,
+              endColumnIndex: index + 1,
+            },
+            cell: {
+              dataValidation: {
+                condition: {
+                  type: "CUSTOM_FORMULA",
+                  values: [
+                    {
+                      userEnteredValue: `=REGEXMATCH(${SheetUtils.columnNumberToLetter(
+                        index + 1
+                      )}${(this.groupHeaderConfig.enabled ? 2 : 1) + 1}, "${
+                        column.validation.values[0]
+                      }")`,
+                    },
+                  ],
+                },
+                strict: true,
+              },
+            },
+            fields: "dataValidation",
+          },
+        };
       }
     }
   }
