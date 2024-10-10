@@ -41,16 +41,51 @@ export class Spreadsheet {
               sheet.properties.gridProperties.columnCount
             )
           );
+          newSheet.groupHeaderConfig.enabled = Boolean(
+            spreadsheetData.data.developerMetadata?.find(
+              (item) => item.metadataKey === "groupingEnabled"
+            )?.metadataValue
+          );
           newSheet.sheetId = sheet.properties.sheetId;
           this.sheets.push(newSheet);
           this.sheets[index].loadHeader();
         });
+
+        await Promise.all(
+          spreadsheetData.data.sheets.map(async (sheet, index: number) => {
+            if (!sheet?.properties?.sheetId) {
+              throw new Error("Sheet ID is not found");
+            }
+            const newSheet = new Sheet(
+              sheet.properties?.title || "N/A",
+              this,
+              new SheetProperties(
+                sheet.properties?.gridProperties?.rowCount || 1,
+                sheet.properties?.gridProperties?.columnCount || 1
+              )
+            );
+            newSheet.groupHeaderConfig.enabled = Boolean(
+              spreadsheetData.data.developerMetadata?.find(
+                (item) => item.metadataKey === "groupingEnabled"
+              )?.metadataValue
+            );
+            newSheet.sheetId = sheet.properties.sheetId;
+            this.sheets.push(newSheet);
+            await this.sheets[index].loadHeader();
+          })
+        );
       }
+      // /// remove =======
+      // const res = await sheetService(this.googleAuth).spreadsheets.values.get({
+      //   spreadsheetId: this.spreadsheetId,
+      //   range: `${this.sheets[0].name}!F4`
+      // })
+      // console.log('>> res', JSON.stringify(res))
+      // /// remove =======
     } catch (err: any) {
       if (err.code === 404) {
         throw new Error("Spreadsheet not found, pass a valid spreadsheet ID");
       }
-      console.log(">> err", err);
       throw err;
     }
   }
@@ -80,6 +115,12 @@ export class Spreadsheet {
             {
               metadataKey: "version",
               metadataValue: this.version,
+              visibility: "DOCUMENT",
+            },
+            {
+              metadataKey: "groupingEnabled",
+              metadataValue:
+                this.sheets[0].groupHeaderConfig.enabled.toString(), // TODO: do we need for all the sheets?
               visibility: "DOCUMENT",
             },
           ],
@@ -120,7 +161,10 @@ export class Spreadsheet {
     if (!this.spreadsheetId) {
       throw new Error("Spreadsheet ID is not available");
     }
-    this.sheets[sheetIndex].properties = new SheetProperties(1000, this.sheets[sheetIndex].columns.length);
+    this.sheets[sheetIndex].properties = new SheetProperties(
+      1000,
+      this.sheets[sheetIndex].columns.length
+    );
     await this.sheets[sheetIndex].addHeaders(this.spreadsheetId);
     await this.sheets[sheetIndex].addFormattingAndValidations(
       this.spreadsheetId
@@ -146,7 +190,6 @@ export class Spreadsheet {
     this.spreadsheetId = await this.createSpreasheet();
     // this.spreadsheetId = "1vOLEtYeGk7RQmzRidPlLRsWq9hEpngDajCEwk30JFkg";
     await this.checkAndGetRequiredMetadata();
-    console.log('>> 1.1')
     await this.addHeaders(0);
   }
 }

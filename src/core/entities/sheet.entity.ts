@@ -17,7 +17,7 @@ export class Sheet {
   public columns: Column[] = [];
   public rows: any[][] = [];
   public headerNames: string[] = [];
-  private groupHeaderConfig: GroupHeaderConfig = {
+  public groupHeaderConfig: GroupHeaderConfig = {
     enabled: false,
     groups: [],
   };
@@ -98,14 +98,11 @@ export class Sheet {
       )}`,
       values: [this.columns.map((column) => column.name)],
     });
-    console.log('row config', JSON.stringify(headerGroupConfig))
     return {
       spreadsheetId,
       valueInputOption: "RAW",
       requestBody: {
-        data: [
-          ...headerGroupConfig,
-        ],
+        data: [...headerGroupConfig],
       },
     };
   }
@@ -290,11 +287,11 @@ export class Sheet {
             fields: "dataValidation",
           },
         };
-      } else if(column.validation.type === ValidationType.CUSTOM_REGEX_MATCH) {
+      } else if (column.validation.type === ValidationType.CUSTOM_REGEX_MATCH) {
         if (!column.validation.values[0]) {
           throw new Error("Regex pattern is required for custom regex match");
         }
-        if(column.validation.values.length > 1) {
+        if (column.validation.values.length > 1) {
           console.warn(
             "Only first value will be considered for custom regex match"
           );
@@ -457,7 +454,8 @@ export class Sheet {
         spreadsheetId: this.spreadsheet.spreadsheetId,
         range: `${this.name}!${SheetUtils.generateSheetRange(
           this.properties?.columnCount || 0,
-          this.properties?.rowCount || 0
+          this.properties?.rowCount || 0,
+          this.groupHeaderConfig.enabled ? 2 : 1 // Do this for goroup header loading and for is protect flag
         )}`,
       });
       const valuesFromSheet = infoObjectFromSheet.data.values;
@@ -482,7 +480,7 @@ export class Sheet {
         range: `${this.name}!${SheetUtils.generateSheetRange(
           this.properties?.columnCount || 0,
           this.properties?.rowCount || 0,
-          2
+          this.groupHeaderConfig.enabled ? 3 : 2
         )}`,
       });
 
